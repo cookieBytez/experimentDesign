@@ -54,8 +54,7 @@ def start_padding_and_split_sessions(data, group_columns, sort_columns, n_steps,
         train = train.sort_values(by=[*group_columns, *sort_columns])
         train = train.drop(['valid', *sort_columns], axis=1)
 
-        #train_array = np.array(list(train.groupby(group_columns).apply(pd.DataFrame.to_numpy)), dtype=object)
-        train_array = np.array(list(train.groupby(group_columns).apply(pd.DataFrame.to_numpy)))
+        train_array = np.array(list(train.groupby(group_columns).apply(pd.DataFrame.to_numpy)), dtype=object)
 
         n_obs = len(train_array)
         n_columns = len(train.columns)
@@ -70,8 +69,7 @@ def start_padding_and_split_sessions(data, group_columns, sort_columns, n_steps,
         valid = valid.sort_values(by=[*group_columns, *sort_columns])
         valid = valid.drop(['valid', *sort_columns], axis=1)
 
-        #valid_array = np.array(list(valid.groupby(group_columns).apply(pd.DataFrame.to_numpy)), dtype=object)
-        valid_array = np.array(list(valid.groupby(group_columns).apply(pd.DataFrame.to_numpy)))
+        valid_array = np.array(list(valid.groupby(group_columns).apply(pd.DataFrame.to_numpy)), dtype=object)
 
         n_obs = len(valid_array)
         n_columns = len(valid.columns)
@@ -87,7 +85,7 @@ def start_padding_and_split_sessions(data, group_columns, sort_columns, n_steps,
         test = data.sort_values(by=[*group_columns, *sort_columns])
         test = test.drop([*sort_columns], axis=1)
 
-        test_array = np.array(list(test.groupby(group_columns).apply(pd.DataFrame.to_numpy)))
+        test_array = np.array(list(test.groupby(group_columns).apply(pd.DataFrame.to_numpy)), dtype=object)
 
         n_obs = len(test_array)
         n_columns = len(test.columns)
