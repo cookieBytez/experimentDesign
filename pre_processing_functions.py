@@ -12,7 +12,7 @@ def one_hot_encode_actions_fit_transform(data):
     # One-hot encoding
     encoder = OneHotEncoder()
     dummies = encoder.fit_transform(data[['action_section','action_object','action_type']]).toarray()
-    dummy_names = encoder.get_feature_names(['action_section','action_object','action_type'])
+    dummy_names = encoder.get_feature_names_out(['action_section','action_object','action_type'])
     data1 = pd.concat([data, pd.DataFrame(dummies, columns = dummy_names)], axis=1)
     data1 = data1.drop(['action_section','action_object','action_type'], axis=1)
     
@@ -36,7 +36,7 @@ def one_hot_encode_actions_transform(data):
     encoder.fit(longest_categories)
 
     dummies = encoder.transform(data[['action_section','action_object','action_type']]).toarray()
-    dummy_names = encoder.get_feature_names(['action_section','action_object','action_type'])
+    dummy_names = encoder.get_feature_names_out(['action_section','action_object','action_type'])
     data1 = pd.concat([data, pd.DataFrame(dummies, columns = dummy_names)], axis=1)
     data1 = data1.drop(['action_section','action_object','action_type'], axis=1)
 

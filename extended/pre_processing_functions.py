@@ -13,7 +13,7 @@ def one_hot_encode_actions_fit_transform(data):
     # One-hot encoding
     encoder = OneHotEncoder()
     dummies = encoder.fit_transform(data[['action_section','action_object','action_type']]).toarray()
-    dummy_names = encoder.get_feature_names(['action_section','action_object','action_type'])
+    dummy_names = encoder.get_feature_names_out(['action_section','action_object','action_type'])
     data1 = pd.concat([data, pd.DataFrame(dummies, columns = dummy_names)], axis=1)
     data1 = data1.drop(['action_section','action_object','action_type'], axis=1)
     
@@ -108,7 +108,8 @@ def end_padding_and_split_sessions(data, group_columns, sort_columns, n_steps, s
         train = train.sort_values(by=[*group_columns, *sort_columns])
         train = train.drop(['valid', *sort_columns], axis=1)
 
-        train_array = np.array(list(train.groupby(group_columns).apply(pd.DataFrame.to_numpy)))
+        #train_array = np.array(list(train.groupby(group_columns).apply(pd.DataFrame.to_numpy)))
+        train_array = list(train.groupby(group_columns).apply(pd.DataFrame.to_numpy))
 
         n_obs = len(train_array)
         n_columns = len(train.columns)
@@ -123,7 +124,8 @@ def end_padding_and_split_sessions(data, group_columns, sort_columns, n_steps, s
         valid = valid.sort_values(by=[*group_columns, *sort_columns])
         valid = valid.drop(['valid', *sort_columns], axis=1)
 
-        valid_array = np.array(list(valid.groupby(group_columns).apply(pd.DataFrame.to_numpy)))
+        #valid_array = np.array(list(valid.groupby(group_columns).apply(pd.DataFrame.to_numpy)))
+        valid_array = list(valid.groupby(group_columns).apply(pd.DataFrame.to_numpy))
 
         n_obs = len(valid_array)
         n_columns = len(valid.columns)
