@@ -66,9 +66,9 @@ model.add(TimeDistributed(Dense(n_outputs, activation='softmax')))
 model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
 es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=5)
-mc = ModelCheckpoint('model_GRU4REC.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+mc = ModelCheckpoint('model_GRU4REC.h5.keras', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
 
 history = model.fit(train_x, train_y, validation_data=(valid_x, valid_y), epochs=epochs, batch_size=batch_size, callbacks=[es, mc])
 
-saved_model = load_model('model_GRU4REC.h5')
+saved_model = load_model('model_GRU4REC.h5.keras')
 eval_accuracy = saved_model.evaluate(valid_x, valid_y)[1]
