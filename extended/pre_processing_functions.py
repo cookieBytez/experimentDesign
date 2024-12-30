@@ -54,6 +54,7 @@ def start_padding_and_split_sessions(data, group_columns, sort_columns, n_steps,
         train = train.sort_values(by=[*group_columns, *sort_columns])
         train = train.drop(['valid', *sort_columns], axis=1)
 
+        #train_array = np.array(list(train.groupby(group_columns).apply(pd.DataFrame.to_numpy)), dtype=object)
         train_array = np.array(list(train.groupby(group_columns).apply(pd.DataFrame.to_numpy)))
 
         n_obs = len(train_array)
@@ -69,6 +70,7 @@ def start_padding_and_split_sessions(data, group_columns, sort_columns, n_steps,
         valid = valid.sort_values(by=[*group_columns, *sort_columns])
         valid = valid.drop(['valid', *sort_columns], axis=1)
 
+        #valid_array = np.array(list(valid.groupby(group_columns).apply(pd.DataFrame.to_numpy)), dtype=object)
         valid_array = np.array(list(valid.groupby(group_columns).apply(pd.DataFrame.to_numpy)))
 
         n_obs = len(valid_array)
@@ -108,8 +110,8 @@ def end_padding_and_split_sessions(data, group_columns, sort_columns, n_steps, s
         train = train.sort_values(by=[*group_columns, *sort_columns])
         train = train.drop(['valid', *sort_columns], axis=1)
 
+        train_array = np.array(list(train.groupby(group_columns).apply(pd.DataFrame.to_numpy)), dtype=object)
         #train_array = np.array(list(train.groupby(group_columns).apply(pd.DataFrame.to_numpy)))
-        train_array = list(train.groupby(group_columns).apply(pd.DataFrame.to_numpy))
 
         n_obs = len(train_array)
         n_columns = len(train.columns)
@@ -124,8 +126,8 @@ def end_padding_and_split_sessions(data, group_columns, sort_columns, n_steps, s
         valid = valid.sort_values(by=[*group_columns, *sort_columns])
         valid = valid.drop(['valid', *sort_columns], axis=1)
 
+        valid_array = np.array(list(valid.groupby(group_columns).apply(pd.DataFrame.to_numpy)), dtype=object)
         #valid_array = np.array(list(valid.groupby(group_columns).apply(pd.DataFrame.to_numpy)))
-        valid_array = list(valid.groupby(group_columns).apply(pd.DataFrame.to_numpy))
 
         n_obs = len(valid_array)
         n_columns = len(valid.columns)
