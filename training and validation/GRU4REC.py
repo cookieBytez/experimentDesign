@@ -1,5 +1,8 @@
 import numpy as np
 import pandas as pd
+import sys
+
+sys.path.append('../extended')
 import pre_processing_functions
 from numpy.random import seed
 import tensorflow as tf
