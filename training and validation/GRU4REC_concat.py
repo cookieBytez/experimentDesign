@@ -1,25 +1,33 @@
 import numpy as np
 import pandas as pd
+
+# workarounds
+import sys
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+sys.path.append('../extended')
+
+
 import pre_processing_functions
 from numpy.random import seed
 import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.layers import Dropout
-from tensorflow.keras.layers import GRU
-from tensorflow.keras.layers import Masking
-from tensorflow.keras.layers import TimeDistributed
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
-from tensorflow.keras.models import load_model
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.layers import Dropout
+from keras.layers import GRU
+from keras.layers import Masking
+from keras.layers import TimeDistributed
+from keras.callbacks import EarlyStopping, ModelCheckpoint
+from keras.models import load_model
 
 
 ''' Sessions. '''
-data_sessions = pd.read_csv('sessions_train.csv')
+data_sessions = pd.read_csv('../Data Sets/sessions_train.csv')
 
 data_sessions = pre_processing_functions.one_hot_encode_actions_fit_transform(data_sessions)[0]
 
 # Add column with start time for each session.
-data_sessions['session_start'] = data_sessions.groupby(['event_id', 'session_id']).action_time.transform(np.min)
+data_sessions['session_start'] = data_sessions.groupby(['event_id', 'session_id']).action_time.transform("min")
 data_sessions = data_sessions.drop(['session_id'], axis=1)
 
 group_columns = ['event_id']
@@ -58,9 +66,9 @@ model.add(TimeDistributed(Dense(n_outputs, activation='softmax')))
 model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
 es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=5)
-mc = ModelCheckpoint('model_GRU4REC_concat.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+mc = ModelCheckpoint('model_GRU4REC_concat.h5.keras', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
 
 history = model.fit(train_x, train_y, validation_data=(valid_x, valid_y), epochs=epochs, batch_size=batch_size, callbacks=[es, mc])
 
-saved_model = load_model('model_GRU4REC_concat.h5')
+saved_model = load_model('model_GRU4REC_concat.h5.keras')
 eval_accuracy = saved_model.evaluate(valid_x, valid_y)[1]

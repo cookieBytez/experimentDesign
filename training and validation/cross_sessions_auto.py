@@ -1,25 +1,33 @@
 import numpy as np
 import pandas as pd
+
+# workarounds
+import sys
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+sys.path.append('../extended')
+
+
 import pre_processing_functions
 from numpy.random import seed
 import tensorflow as tf
-from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Input
-from tensorflow.keras.layers import Masking
-from tensorflow.keras.layers import GRU
-from tensorflow.keras.layers import RepeatVector
-from tensorflow.keras.layers import TimeDistributed
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
-from tensorflow.keras.models import load_model
+from keras.models import Model
+from keras.layers import Input
+from keras.layers import Masking
+from keras.layers import GRU
+from keras.layers import RepeatVector
+from keras.layers import TimeDistributed
+from keras.layers import Dense
+from keras.callbacks import EarlyStopping, ModelCheckpoint
+from keras.models import load_model
 import evaluation_functions
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dropout
+from keras.models import Sequential
+from keras.layers import Dropout
 from sklearn import metrics
 
 
 ''' Sessions. '''
-data_sessions = pd.read_csv('sessions_train.csv')
+data_sessions = pd.read_csv('../Data Sets/sessions_train.csv')
 n_sections = len(pd.unique(data_sessions['action_section']))
 n_objects = len(pd.unique(data_sessions['action_object']))
 n_types = len(pd.unique(data_sessions['action_type']))

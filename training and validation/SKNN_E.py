@@ -20,11 +20,9 @@ n_steps = 222
 train_x, valid_x = pre_processing_functions.end_padding_and_split_sessions(data_sessions, group_columns, sort_columns, n_steps)
 
 print(train_x)
-print('hi')
-print(valid_x)
-
 train_x = train_x[:,:-1,:]
 valid_x = valid_x[:,:-1,:]
+print(train_x)
 
 
 object_columns = [col for col in data_sessions if col.startswith('action_object')]

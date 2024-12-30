@@ -1,20 +1,24 @@
 import numpy as np
 import pandas as pd
-import sys
 
+# workarounds
+import sys
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 sys.path.append('../extended')
+
+
 import pre_processing_functions
 from numpy.random import seed
 import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.layers import Dropout
-from tensorflow.keras.layers import GRU
-from tensorflow.keras.layers import Masking
-from tensorflow.keras.layers import TimeDistributed
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
-from tensorflow.keras.models import load_model
-
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.layers import Dropout
+from keras.layers import GRU
+from keras.layers import Masking
+from keras.layers import TimeDistributed
+from keras.callbacks import EarlyStopping, ModelCheckpoint
+from keras.models import load_model
 
 ''' Sessions. '''
 data_sessions = pd.read_csv('../Data Sets/sessions_train.csv')
@@ -22,10 +26,10 @@ data_sessions = pd.read_csv('../Data Sets/sessions_train.csv')
 data_sessions = pre_processing_functions.one_hot_encode_actions_fit_transform(data_sessions)[0]
 
 # Add column with start time for each session.
-data_sessions['session_start'] = data_sessions.groupby(['event_id', 'session_id']).action_time.transform(np.min)
+data_sessions['session_start'] = data_sessions.groupby(['event_id', 'session_id']).action_time.transform("min")
 
 # Select the last session for each purchase events.
-idx = data_sessions.groupby(['event_id'])['session_start'].transform(max) == data_sessions['session_start']
+idx = data_sessions.groupby(['event_id'])['session_start'].transform("max") == data_sessions['session_start']
 data_sessions = data_sessions[idx]
 
 data_sessions = data_sessions.drop(['session_id', 'session_start'], axis=1)
