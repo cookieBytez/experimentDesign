@@ -195,7 +195,128 @@ class SKNN_E:
         recommendations = [item[0] for item in sorted_items[:n_recommendations]]
         return recommendations
 
-# usage
+    def calculate_metrics(self, test_purchases, test_sessions, k=10):
+        """
+        Calculate HR@k, Precision@k, Recall@k, MRR@k, and MAP@k for test data
+        
+        Parameters:
+        -----------
+        test_purchases : pd.DataFrame
+            DataFrame containing test purchase events
+        test_sessions : pd.DataFrame
+            DataFrame containing test session data
+        k : int
+            Number of recommendations to generate
+            
+        Returns:
+        --------
+        dict
+            Dictionary containing the calculated metrics
+        """
+        metrics = {
+            f'HR@{k}': 0,
+            f'Precision@{k}': 0,
+            f'Recall@{k}': 0,
+            f'MRR@{k}': 0,
+            f'MAP@{k}': 0
+        }
+        
+        # Group test purchases by event_id
+        test_purchase_dict = defaultdict(set)
+        for _, row in test_purchases.iterrows():
+            test_purchase_dict[row['event_id']].add(row['item_id'])
+        
+        # Get unique test users
+        test_users = test_sessions['event_id'].unique()
+        total_users = len(test_users)
+        
+        if total_users == 0:
+            return metrics
+        
+        ap_sum = 0  # For MAP calculation
+        
+        for user_id in test_users:
+            # Get user sessions and actual purchases
+            user_sessions = test_sessions[test_sessions['event_id'] == user_id]
+            actual_purchases = test_purchase_dict.get(user_id, set())
+            
+            if not actual_purchases:
+                continue
+                
+            # Get recommendations for user
+            recommendations = self.recommend(user_sessions, n_recommendations=k)
+            recommended_set = set(recommendations)
+            
+            # Hit Ratio: 1 if at least one item is correctly recommended
+            hit = len(actual_purchases & recommended_set) > 0
+            metrics[f'HR@{k}'] += hit
+            
+            # Precision: proportion of recommended items that were actually purchased
+            precision = len(actual_purchases & recommended_set) / len(recommendations) if recommendations else 0
+            metrics[f'Precision@{k}'] += precision
+            
+            # Recall: proportion of purchased items that were recommended
+            recall = len(actual_purchases & recommended_set) / len(actual_purchases) if actual_purchases else 0
+            metrics[f'Recall@{k}'] += recall
+            
+            # MRR: reciprocal rank of the first relevant recommendation
+            mrr = 0
+            for i, item in enumerate(recommendations):
+                if item in actual_purchases:
+                    mrr = 1.0 / (i + 1)
+                    break
+            metrics[f'MRR@{k}'] += mrr
+            
+            # Average Precision for MAP
+            ap = 0
+            hits = 0
+            for i, item in enumerate(recommendations):
+                if item in actual_purchases:
+                    hits += 1
+                    ap += hits / (i + 1)
+            if hits > 0:
+                ap = ap / min(len(actual_purchases), k)
+                ap_sum += ap
+        
+        # Normalize metrics by number of users
+        for metric in ['HR', 'Precision', 'Recall', 'MRR']:
+            metrics[f'{metric}@{k}'] /= total_users
+        
+        # Calculate MAP
+        metrics[f'MAP@{k}'] = ap_sum / total_users
+        
+        return metrics
+
+    def evaluate_test_set(self, test_purchases, test_sessions, k_values=[5, 10, 20]):
+        """
+        Evaluate the model on test data for multiple k values
+        
+        Parameters:
+        -----------
+        test_purchases : pd.DataFrame
+            DataFrame containing test purchase events
+        test_sessions : pd.DataFrame
+            DataFrame containing test session data
+        k_values : list
+            List of k values to evaluate
+            
+        Returns:
+        --------
+        dict
+            Dictionary containing metrics for each k value
+        """
+        results = {}
+        
+        for k in k_values:
+            metrics = self.calculate_metrics(test_purchases, test_sessions, k)
+            results[k] = metrics
+            
+            print(f"\nMetrics for k={k}:")
+            for metric, value in metrics.items():
+                print(f"{metric}: {value:.4f}")
+        
+        return results
+
 if __name__ == "__main__":
     purchase_events = pd.read_csv('../Data Sets/purchase_events_train.csv')
     sessions = pd.read_csv('../Data Sets/sessions_train.csv')
@@ -206,3 +327,9 @@ if __name__ == "__main__":
     val_user_sessions = model.val_sessions[model.val_sessions['event_id'] == model.val_sessions['event_id'].iloc[0]]
     recommendations = model.recommend(val_user_sessions, n_recommendations=5)
     print("Recommended items:", recommendations)
+
+    test_purchases = pd.read_csv('../Data Sets/purchase_events_test.csv')
+    test_sessions = pd.read_csv('../Data Sets/sessions_test.csv')
+
+    results = model.evaluate_test_set(test_purchases, test_sessions, k_values=[3])
+    print(results)

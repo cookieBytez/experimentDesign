@@ -4,7 +4,7 @@ import pandas as pd
 # workarounds
 import sys
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+#os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 sys.path.append('../extended')
 
 
