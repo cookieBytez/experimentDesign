@@ -14,7 +14,7 @@ def save_runtime(times,filename):
 
 
 seeds = [42]#       [21,42,63,84]// set seed sccordingly
-rates = [0.2,0.3,0.4,0.5]#      [0.1,0.2,0.3,0.4,0.5]// set learning rates sccordingly
+rates = [0.1,0.2,0.3,0.4,0.5]#      [0.1,0.2,0.3,0.4,0.5]// set learning rates sccordingly
 
 #Uncomment the models which needs to be run
 
