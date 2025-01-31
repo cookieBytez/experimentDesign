@@ -1,0 +1,15 @@
+Start: 2025-01-31 12:51:18.717163 - Seed: 42, Rate: 0.1, Model: cs_auto
+End: 2025-01-31 17:28:42.145005 - Seed: 42, Rate: 0.1, Model: cs_auto
+Total time:16643.427842 secs
+Start: 2025-01-31 17:51:12.920236 - Seed: 42, Rate: 0.2, Model: cs_auto
+End: 2025-01-31 17:55:54.072436 - Seed: 42, Rate: 0.2, Model: cs_auto
+Total time:281.1522 secs
+Start: 2025-01-31 17:55:54.074654 - Seed: 42, Rate: 0.3, Model: cs_auto
+End: 2025-01-31 18:00:39.166396 - Seed: 42, Rate: 0.3, Model: cs_auto
+Total time:285.091742 secs
+Start: 2025-01-31 18:00:39.168395 - Seed: 42, Rate: 0.4, Model: cs_auto
+End: 2025-01-31 18:05:25.555983 - Seed: 42, Rate: 0.4, Model: cs_auto
+Total time:286.387588 secs
+Start: 2025-01-31 18:05:25.557866 - Seed: 42, Rate: 0.5, Model: cs_auto
+End: 2025-01-31 18:10:50.459448 - Seed: 42, Rate: 0.5, Model: cs_auto
+Total time:324.901582 secs

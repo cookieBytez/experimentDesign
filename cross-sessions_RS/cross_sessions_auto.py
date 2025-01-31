@@ -112,7 +112,8 @@ def train_model(set_seed,set_rate):
 
         encoder_model = Model(saved_model.input, saved_model.layers[-6].output)  
         encoder_model.save('models/model_auto_encoder.h5')
-
+    else:
+        encoder_model = load_model('models/model_auto_encoder.h5')
 
     ''' Sessions for RNN. '''
     group_columns = ['event_id', 'session_id']

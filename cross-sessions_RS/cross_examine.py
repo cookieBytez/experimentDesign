@@ -14,7 +14,7 @@ def save_runtime(times,filename):
 
 
 seeds = [42]#       [21,42,63,84]// set seed sccordingly
-rates = [0.1,0.2,0.3,0.4,0.5]#      [0.1,0.2,0.3,0.4,0.5]// set learning rates sccordingly
+rates = [0.2,0.3,0.4,0.5]#      [0.1,0.2,0.3,0.4,0.5]// set learning rates sccordingly
 
 #Uncomment the models which needs to be run
 
@@ -68,18 +68,18 @@ rates = [0.1,0.2,0.3,0.4,0.5]#      [0.1,0.2,0.3,0.4,0.5]// set learning rates s
 #         save_runtime(times,'cs_encode')
 
 #cross_sessions_auto
-# for i in seeds:
-#     for j in rates:
-#         times = []
-#         print("cross_sessions_auto")
-#         start_time = datetime.now()
-#         times.append(f"Start: {start_time} - Seed: {i}, Rate: {j}, Model: cs_auto")
-#         cross_sessions_auto.train_model(i,j)
-#         cross_sessions_auto_evaluation.eval_model(i,j)
-#         end_time = datetime.now()
-#         times.append(f"End: {end_time} - Seed: {i}, Rate: {j}, Model: cs_auto")
-#         times.append(f"Total time:{(end_time-start_time).total_seconds()} secs")
-#         save_runtime(times,'cs_auto')
+for i in seeds:
+    for j in rates:
+        times = []
+        print("cross_sessions_auto")
+        start_time = datetime.now()
+        times.append(f"Start: {start_time} - Seed: {i}, Rate: {j}, Model: cs_auto")
+        cross_sessions_auto.train_model(i,j)
+        cross_sessions_auto_evaluation.eval_model(i,j)
+        end_time = datetime.now()
+        times.append(f"End: {end_time} - Seed: {i}, Rate: {j}, Model: cs_auto")
+        times.append(f"Total time:{(end_time-start_time).total_seconds()} secs")
+        save_runtime(times,'cs_auto')
 
 #cross_sessions_concat
 # for i in seeds:
