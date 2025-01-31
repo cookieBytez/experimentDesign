@@ -15,3 +15,5 @@ cross-sessions_RS/__pycache__/GRU4REC_evaluation.cpython-37.pyc
 cross-sessions_RS/__pycache__/GRU4REC.cpython-37.pyc
 cross-sessions_RS/__pycache__/popular_evaluation.cpython-37.pyc
 .gitignore
+cross-sessions_RS/__pycache__/random_evaluation.cpython-37.pyc
+cross-sessions_RS/cross_examine.py
