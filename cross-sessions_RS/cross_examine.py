@@ -54,18 +54,18 @@ rates = [0.1,0.2,0.3,0.4,0.5]#      [0.1,0.2,0.3,0.4,0.5]// set learning rates s
 #         save_runtime(times,'GRU4REC')
 
 #cross_sessions_encode
-# for i in seeds:
-#     for j in rates:
-#         times = []
-#         print("cross_sessions_encode")
-#         start_time = datetime.now()
-#         times.append(f"Start: {start_time} - Seed: {i}, Rate: {j}, Model: cs_encode")
-#         cross_sessions_encode.train_model(i,j)
-#         cross_sessions_encode_evaluation.eval_model(i,j)
-#         end_time = datetime.now()
-#         times.append(f"End: {end_time} - Seed: {i}, Rate: {j}, Model: cs_encode")
-#         times.append(f"Total time:{(end_time-start_time).total_seconds()} secs")
-#         save_runtime(times,'cs_encode')
+for i in seeds:
+    for j in rates:
+        times = []
+        print("cross_sessions_encode")
+        start_time = datetime.now()
+        times.append(f"Start: {start_time} - Seed: {i}, Rate: {j}, Model: cs_encode")
+        cross_sessions_encode.train_model(i,j)
+        cross_sessions_encode_evaluation.eval_model(i,j)
+        end_time = datetime.now()
+        times.append(f"End: {end_time} - Seed: {i}, Rate: {j}, Model: cs_encode")
+        times.append(f"Total time:{(end_time-start_time).total_seconds()} secs")
+        save_runtime(times,'cs_encode')
 
 #cross_sessions_auto
 # for i in seeds:
