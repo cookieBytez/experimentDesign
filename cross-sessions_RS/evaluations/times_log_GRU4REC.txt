@@ -1,0 +1,6 @@
+Start: 2025-01-31 14:03:07.930134 - Seed: 42, Rate: 0.1, Model: GRU4REC_concat
+End: 2025-01-31 15:13:02.880294 - Seed: 42, Rate: 0.1, Model: GRU4REC_concat
+Total time:4194.95016 secs
+Start: 2025-01-31 15:13:02.880738 - Seed: 42, Rate: 0.2, Model: GRU4REC_concat
+End: 2025-01-31 18:11:35.263043 - Seed: 42, Rate: 0.2, Model: GRU4REC_concat
+Total time:10712.382305 secs
