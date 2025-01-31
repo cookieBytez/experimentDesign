@@ -1,3 +1,17 @@
 env_a2
 env_a2/conda-meta/history
 env_a2/etc/aau_token
+cross-sessions_RS/__pycache__/pre_processing_functions.cpython-37.pyc
+cross-sessions_RS/__pycache__/evaluation_functions.cpython-37.pyc
+cross-sessions_RS/__pycache__/cross_sessions_auto.cpython-37.pyc
+cross-sessions_RS/__pycache__/cross_sessions_auto_evaluation.cpython-37.pyc
+cross-sessions_RS/__pycache__/cross_sessions_concat_evaluation.cpython-37.pyc
+cross-sessions_RS/__pycache__/cross_sessions_concat.cpython-37.pyc
+cross-sessions_RS/__pycache__/cross_sessions_encode_evaluation.cpython-37.pyc
+cross-sessions_RS/__pycache__/cross_sessions_encode.cpython-37.pyc
+cross-sessions_RS/__pycache__/GRU4REC_concat_evaluation.cpython-37.pyc
+cross-sessions_RS/__pycache__/GRU4REC_concat.cpython-37.pyc
+cross-sessions_RS/__pycache__/GRU4REC_evaluation.cpython-37.pyc
+cross-sessions_RS/__pycache__/GRU4REC.cpython-37.pyc
+cross-sessions_RS/__pycache__/popular_evaluation.cpython-37.pyc
+.gitignore
