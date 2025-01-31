@@ -16,6 +16,7 @@ import evaluation_functions
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dropout
 from sklearn import metrics
+import os
 
 def train_model(set_seed,set_rate):
 
@@ -59,7 +60,7 @@ def train_model(set_seed,set_rate):
 
 
     ''' Autoencoder model. '''
-    if !os.path.exists('models/model_auto_encoder.h5'):
+    if not os.path.exists('models/model_auto_encoder.h5'):
         seed(42)
         tf.random.set_seed(42)
 
