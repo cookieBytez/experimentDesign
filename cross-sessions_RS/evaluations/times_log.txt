@@ -61,3 +61,12 @@ Total time:512.428865 secs
 Start: 2025-01-31 06:21:28.398810 - Seed: 21, Rate: 0.1, Model: GRU4REC_concat
 End: 2025-01-31 07:25:46.420074 - Seed: 21, Rate: 0.1, Model: GRU4REC_concat
 Total time:3858.021264 secs
+Start: 2025-01-31 07:25:46.420074 - Seed: 21, Rate: 0.2, Model: GRU4REC_concat
+End: 2025-01-31 08:25:42.927998 - Seed: 21, Rate: 0.2, Model: GRU4REC_concat
+Total time:3596.507924 secs
+Start: 2025-01-31 08:25:42.930553 - Seed: 21, Rate: 0.3, Model: GRU4REC_concat
+End: 2025-01-31 09:35:34.846379 - Seed: 21, Rate: 0.3, Model: GRU4REC_concat
+Total time:4191.915826 secs
+Start: 2025-01-31 09:35:34.846379 - Seed: 21, Rate: 0.4, Model: GRU4REC_concat
+End: 2025-01-31 11:07:56.697542 - Seed: 21, Rate: 0.4, Model: GRU4REC_concat
+Total time:5541.851163 secs
