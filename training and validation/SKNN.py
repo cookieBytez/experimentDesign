@@ -1,565 +1,332 @@
-# below code is taken from https://github.com/rn5l/session-rec
-# by the authors of "Session-aware Recommendation: A Surprising Quest for the State-of-the-art"
-
-
-from _operator import itemgetter
-from math import sqrt
-import random
-import time
-import numpy as np
 import pandas as pd
+import numpy as np
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import MultiLabelBinarizer
+from collections import defaultdict
+from datetime import datetime, timedelta
+
+# workarounds
+import sys
 import os
-import psutil
-import gc
+#os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+sys.path.append('../extended')
 
-class ContextKNN:
-    '''
-    ContextKNN( k, sample_size=500, sampling='recent',  similarity = 'jaccard', remind=False, pop_boost=0, session_key = 'SessionId', item_key= 'ItemId')
 
-    Parameters
-    -----------
-    k : int
-        Number of neighboring session to calculate the item scores from. (Default value: 100)
-    sample_size : int
-        Defines the length of a subset of all training sessions to calculate the nearest neighbors from. (Default value: 500)
-    sampling : string
-        String to define the sampling method for sessions (recent, random). (default: recent)
-    similarity : string
-        String to define the method for the similarity calculation (jaccard, cosine, binary, tanimoto). (default: jaccard)
-    remind : bool
-        Should the last items of the current session be boosted to the top as reminders
-    pop_boost : int
-        Push popular items in the neighbor sessions by this factor. (default: 0 to leave out)
-    extend : bool
-        Add evaluated sessions to the maps
-    normalize : bool
-        Normalize the scores in the end
-    session_key : string
-        Header of the session ID column in the input file. (default: 'SessionId')
-    item_key : string
-        Header of the item ID column in the input file. (default: 'ItemId')
-    time_key : string
-        Header of the timestamp column in the input file. (default: 'Time')
-    '''
+import pre_processing_functions as pre
 
-    def __init__( self, k, sample_size=1000, sampling='recent',  similarity = 'jaccard', remind=False, pop_boost=0, extend=False, normalize=True, session_key = 'SessionId', item_key= 'ItemId', time_key= 'Time' ):
-       
-        self.remind = remind
-        self.k = k
-        self.sample_size = sample_size
-        self.sampling = sampling
-        self.similarity = similarity
-        self.pop_boost = pop_boost
-        self.session_key = session_key
-        self.item_key = item_key
-        self.time_key = time_key
-        self.extend = extend
-        self.normalize = normalize
+class SKNN:
+    def __init__(self, n_neighbors=5, recent_sessions_window=30):
+        """
+        Initialize SKNN_E model
         
-        #updated while recommending
-        self.session = -1
-        self.session_items = []
-        self.relevant_sessions = set()
-
-        # cache relations once at startup
-        self.session_item_map = dict() 
-        self.item_session_map = dict()
-        self.session_time = dict()
+        Parameters:
+        -----------
+        n_neighbors : int
+            Number of neighbors to use for KNN
+        recent_sessions_window : int
+            Number of days to consider for recent sessions
+        """
+        self.n_neighbors = n_neighbors
+        self.recent_sessions_window = recent_sessions_window
+        self.knn = KNeighborsClassifier(n_neighbors=n_neighbors, metric='cosine')
+        self.mlb = MultiLabelBinarizer()
         
-        self.sim_time = 0
+    def split_train_validation(self, purchase_events, sessions):
+        """
+        Split data into training and validation sets based on 'valid' column
         
-    def fit(self, train, items=None):
-        '''
-        Trains the predictor.
-        
-        Parameters
-        --------
-        data: pandas.DataFrame
-            Training data. It contains the transactions of the sessions. It has one column for session IDs, one for item IDs and one for the timestamp of the events (unix timestamps).
-            It must have a header. Column names are arbitrary, but must correspond to the ones you set during the initialization of the network (session_key, item_key, time_key properties).
+        Parameters:
+        -----------
+        purchase_events : pd.DataFrame
+            DataFrame containing purchase events with 'valid' column
+        sessions : pd.DataFrame
+            DataFrame containing srssion data with 'valid' column
             
-        '''
-        
-        index_session = train.columns.get_loc( self.session_key )
-        index_item = train.columns.get_loc( self.item_key )
-        index_time = train.columns.get_loc( self.time_key )
-        
-        session = -1
-        session_items = set()
-        time = -1
-        #cnt = 0
-        for row in train.itertuples(index=False):
-            # cache items of sessions
-            if row[index_session] != session:
-                if len(session_items) > 0:
-                    self.session_item_map.update({session : session_items})
-                    # cache the last time stamp of the session
-                    self.session_time.update({session : time})
-                session = row[index_session]
-                session_items = set()
-            time = row[index_time]
-            session_items.add(row[index_item])
-            
-            # cache sessions involving an item
-            map_is = self.item_session_map.get( row[index_item] )
-            if map_is is None:
-                map_is = set()
-                self.item_session_map.update({row[index_item] : map_is})
-            map_is.add(row[index_session])
-            
-        # Add the last tuple    
-        self.session_item_map.update({session : session_items})
-        self.session_time.update({session : time})
-        
-        
-    def predict_next(self, session_id, input_item_id, predict_for_item_ids, skip=False, mode_type='view', timestamp=0):
-        '''
-        Gives predicton scores for a selected set of items on how likely they be the next item in the session.
-                
-        Parameters
+        Returns:
         --------
-        session_id : int or string
-            The session IDs of the event.
-        input_item_id : int or string
-            The item ID of the event. Must be in the set of item IDs of the training set.
-        predict_for_item_ids : 1D array
-            IDs of items for which the network should give prediction scores. Every ID must be in the set of item IDs of the training set.
-            
-        Returns
-        --------
-        out : pandas.Series
-            Prediction scores for selected items on how likely to be the next item of this session. Indexed by the item IDs.
+        tuple
+            (train_purchases, val_purchases, train_sessions, val_sessions)
+        """
+        # Split purchase events
+        train_purchases = purchase_events[purchase_events['valid'] == 0].drop('valid', axis=1)
+        val_purchases = purchase_events[purchase_events['valid'] == 1].drop('valid', axis=1)
         
-        '''
+        # Split sessions
+        train_sessions = sessions[sessions['valid'] == 0].drop('valid', axis=1)
+        val_sessions = sessions[sessions['valid'] == 1].drop('valid', axis=1)
         
-#         gc.collect()
-#         process = psutil.Process(os.getpid())
-#         print( 'cknn.predict_next: ', process.memory_info().rss, ' memory used')
-
-        # if(type(session_id) is np.ndarray):
-        #     session_id = session_id[0]
-        # if(type(input_item_id) is np.ndarray):
-        #     input_item_id = input_item_id[0]
-
-        if( self.session != session_id ): #new session
-            
-            if( self.extend ):
-                item_set = set( self.session_items )
-                self.session_item_map[self.session] = item_set;
-                for item in item_set:
-                    map_is = self.item_session_map.get( item )
-                    if map_is is None:
-                        map_is = set()
-                        self.item_session_map.update({item : map_is})
-                    map_is.add(self.session)
-                    
-                ts = time.time()
-                self.session_time.update({self.session : ts})
-                
-                
-            self.session = session_id
-            self.session_items = list()
-            self.relevant_sessions = set()
-        
-        if mode_type == 'view':
-            self.session_items.append( input_item_id )
-        
-        if skip:
-            return
-                        
-        neighbors = self.find_neighbors( set(self.session_items), input_item_id, session_id )
-        scores = self.score_items( neighbors )
-                
-        # add some reminders
-        if self.remind:
-             
-            reminderScore = 5
-            takeLastN = 3
-             
-            cnt = 0
-            for elem in self.session_items[-takeLastN:]:
-                cnt = cnt + 1
-                #reminderScore = reminderScore + (cnt/100)
-                 
-                oldScore = scores.get( elem )
-                newScore = 0
-                if oldScore is None:
-                    newScore = reminderScore
-                else:
-                    newScore = oldScore + reminderScore
-                #print 'old score ', oldScore
-                # update the score and add a small number for the position 
-                newScore = (newScore * reminderScore) + (cnt/100)
-                 
-                scores.update({elem : newScore})
-        
-        #push popular ones
-        if self.pop_boost > 0:
-               
-            pop = self.item_pop( neighbors )
-            # Iterate over the item neighbors
-            #print itemScores
-            for key in scores:
-                item_pop = pop.get(key)
-                # Gives some minimal MRR boost?
-                scores.update({key : (scores[key] + (self.pop_boost * item_pop))})
-         
-        
-        # Create things in the format ..
-        predictions = np.zeros(len(predict_for_item_ids))
-        mask = np.in1d( predict_for_item_ids, list(scores.keys()) )
-        
-        items = predict_for_item_ids[mask]
-        values = [scores[x] for x in items]
-        predictions[mask] = values
-        series = pd.Series(data=predictions, index=predict_for_item_ids)
-        
-        if self.normalize:
-            series = series / series.max()
-        
-        return series 
-
-    def item_pop(self, sessions):
-        '''
-        Returns a dict(item,score) of the item popularity for the given list of sessions (only a set of ids)
-        
-        Parameters
-        --------
-        sessions: set
-        
-        Returns
-        --------
-        out : dict            
-        '''
-        result = dict()
-        max_pop = 0
-        for session, weight in sessions:
-            items = self.items_for_session( session )
-            for item in items:
-                
-                count = result.get(item)
-                if count is None:
-                    result.update({item: 1})
-                else:
-                    result.update({item: count + 1})
-                    
-                if( result.get(item) > max_pop ):
-                    max_pop =  result.get(item)
-         
-        for key in result:
-            result.update({key: ( result[key] / max_pop )})
-                   
-        return result
-
-    def jaccard(self, first, second):
-        '''
-        Calculates the jaccard index for two sessions
-        
-        Parameters
-        --------
-        first: Id of a session
-        second: Id of a session
-        
-        Returns 
-        --------
-        out : float value           
-        '''
-        sc = time.perf_counter()
-        intersection = len(first & second)
-        union = len(first | second )
-        res = intersection / union
-        
-        self.sim_time += (time.perf_counter() - sc)
-        
-        return res 
+        return train_purchases, val_purchases, train_sessions, val_sessions
     
-    def cosine(self, first, second):
-        '''
-        Calculates the cosine similarity for two sessions
+    def preprocess_data(self, purchase_events, sessions):
+        """
+        Preprocess the purchase and session data
         
-        Parameters
-        --------
-        first: Id of a session
-        second: Id of a session
-        
-        Returns 
-        --------
-        out : float value           
-        '''
-        li = len(first&second)
-        la = len(first)
-        lb = len(second)
-        result = li / sqrt(la) * sqrt(lb)
+        Parameters:
+        -----------
+        purchase_events : pd.DataFrame
+            DataFrame containing purchase events
+        sessions : pd.DataFrame
+            DataFrame contaning session data
+        """
+        purchase_events['event_time'] = pd.to_datetime(purchase_events['event_time'])
+        sessions['action_time'] = pd.to_datetime(sessions['action_time'])
 
-        return result
-    
-    def tanimoto(self, first, second):
-        '''
-        Calculates the cosine tanimoto similarity for two sessions
+        self.latest_date = max(purchase_events['event_time'].max(), 
+                             sessions['action_time'].max())
         
-        Parameters
-        --------
-        first: Id of a session
-        second: Id of a session
+        # Filter recent sessions
+        #cutoff_date = self.latest_date - timedelta(days=self.recent_sessions_window)
+        #recent_sessions = sessions[sessions['action_time'] >= cutoff_date]
         
-        Returns 
-        --------
-        out : float value           
-        '''
-        li = len(first&second)
-        la = len(first)
-        lb = len(second)
-        result = li / ( la + lb -li )
+        return purchase_events, sessions
 
-        return result
+    def create_action_feature(self, row):
+        """Generate all feature combinations for a session row."""
+        features = []
+        features.append(f"{row['action_section']}")
+        features.append(f"{row['action_section']}_{row['action_type']}")
+        if pd.notna(row['action_object']):
+            features.append(f"{row['action_object']}")
+            features.append(f"{row['action_section']}_{row['action_object']}")
+            features.append(f"{row['action_section']}_{row['action_type']}_{row['action_object']}")
+        return features
     
-    def binary(self, first, second):
-        '''
-        Calculates the ? for 2 sessions
+    def create_user_action_vectors(self, sessions):
+        """
+        Create user action vectors using max pooling over all actions
         
-        Parameters
-        --------
-        first: Id of a session
-        second: Id of a session
+        Parameters:
+        -----------
+        sessions : pd.DataFrame
+            DataFrame containing session data
+        """
         
-        Returns 
-        --------
-        out : float value           
-        '''
-        a = len(first&second)
-        b = len(first)
-        c = len(second)
+        # Group actions by user with multiple features per action
+        user_actions = defaultdict(set)
+        for _, row in sessions.iterrows():
+            features = self.create_action_feature(row)  # Use class method
+            user_actions[row['event_id']].update(features)
         
-        result = (2 * a) / ((2 * a) + b + c)
+        # Convert to list for MultiLabelBinarizer
+        user_actions_list = [(k, list(v)) for k, v in user_actions.items()]
+        self.event_ids = [x[0] for x in user_actions_list]
+        actions_list = [x[1] for x in user_actions_list]
+        
 
-        return result
-    
-    def random(self, first, second):
-        '''
-        Calculates the ? for 2 sessions
+        self.action_matrix = self.mlb.fit_transform(actions_list)
+        self.feature_names = self.mlb.classes_
         
-        Parameters
-        --------
-        first: Id of a session
-        second: Id of a session
+        return self.action_matrix
         
-        Returns 
-        --------
-        out : float value           
-        '''
-        return random.random()
-    
-
-    def items_for_session(self, session):
-        '''
-        Returns all items in the session
-        
-        Parameters
-        --------
-        session: Id of a session
-        
-        Returns 
-        --------
-        out : set           
-        '''
-        return self.session_item_map.get(session);
     
     
-    def sessions_for_item(self, item_id):
-        '''
-        Returns all session for an item
+    def create_purchase_vectors(self, purchase_events):
+        """
+        Create purchase vectors for each user
         
-        Parameters
-        --------
-        item: Id of the item session
-        
-        Returns 
-        --------
-        out : set           
-        '''
-        return self.item_session_map.get( item_id )
-        
-        
-    def most_recent_sessions( self, sessions, number ):
-        '''
-        Find the most recent sessions in the given set
-        
-        Parameters
-        --------
-        sessions: set of session ids
-        
-        Returns 
-        --------
-        out : set           
-        '''
-        sample = set()
-
-        tuples = list()
-        for session in sessions:
-            time = self.session_time.get( session )
-            if time is None:
-                print(' EMPTY TIMESTAMP!! ', session)
-            tuples.append((session, time))
+        Parameters:
+        -----------
+        purchase_events : pd.DataFrame
+            DataFrame containing purchsse events
+        """
+        # Group purchases by user
+        user_purchases = defaultdict(set)
+        for _, row in purchase_events.iterrows():
+            user_purchases[row['event_id']].add(row['item_id'])
             
-        tuples = sorted(tuples, key=itemgetter(1), reverse=True)
-        #print 'sorted list ', sortedList
-        cnt = 0
-        for element in tuples:
-            cnt = cnt + 1
-            if cnt > number:
-                break
-            sample.add( element[0] )
-        #print 'returning sample of size ', len(sample)
-        return sample
-        
-        
-    def possible_neighbor_sessions(self, session_items, input_item_id, session_id):
-        '''
-        Find a set of session to later on find neighbors in.
-        A self.sample_size of 0 uses all sessions in which any item of the current session appears.
-        self.sampling can be performed with the options "recent" or "random".
-        "recent" selects the self.sample_size most recent sessions while "random" just choses randomly. 
-        
-        Parameters
-        --------
-        sessions: set of session ids
-        
-        Returns 
-        --------
-        out : set           
-        '''
-        
-        self.relevant_sessions = self.relevant_sessions | self.sessions_for_item( input_item_id );
-               
-        if self.sample_size == 0: #use all session as possible neighbors
-            
-            print('!!!!! runnig KNN without a sample size (check config)')
-            return self.relevant_sessions
-
-        else: #sample some sessions
-                
-            self.relevant_sessions = self.relevant_sessions | self.sessions_for_item( input_item_id );
-                         
-            if len(self.relevant_sessions) > self.sample_size:
-                
-                if self.sampling == 'recent':
-                    sample = self.most_recent_sessions( self.relevant_sessions, self.sample_size )
-                elif self.sampling == 'random':
-                    sample = random.sample( self.relevant_sessions, self.sample_size )
-                else:
-                    sample = self.relevant_sessions[:self.sample_size]
-                    
-                return sample
-            else: 
-                return self.relevant_sessions
-                        
-
-    def calc_similarity(self, session_items, sessions ):
-        '''
-        Calculates the configured similarity for the items in session_items and each session in sessions.
-        
-        Parameters
-        --------
-        session_items: set of item ids
-        sessions: list of session ids
-        
-        Returns 
-        --------
-        out : list of tuple (session_id,similarity)           
-        '''
-        
-        #print 'nb of sessions to test ', len(sessionsToTest), ' metric: ', self.metric
-        neighbors = []
-        cnt = 0
-        for session in sessions:
-            cnt = cnt + 1
-            # get items of the session, look up the cache first 
-            session_items_test = self.items_for_session( session )
-            
-            similarity = getattr(self , self.similarity)(session_items_test, session_items)
-            if similarity > 0:
-                neighbors.append((session, similarity))
-                
-        return neighbors
-
-
-    #-----------------
-    # Find a set of neighbors, returns a list of tuples (sessionid: similarity) 
-    #-----------------
-    def find_neighbors( self, session_items, input_item_id, session_id):
-        '''
-        Finds the k nearest neighbors for the given session_id and the current item input_item_id. 
-        
-        Parameters
-        --------
-        session_items: set of item ids
-        input_item_id: int 
-        session_id: int
-        
-        Returns 
-        --------
-        out : list of tuple (session_id, similarity)           
-        '''
-        possible_neighbors = self.possible_neighbor_sessions( session_items, input_item_id, session_id )
-        possible_neighbors = self.calc_similarity( session_items, possible_neighbors )
-        
-        possible_neighbors = sorted( possible_neighbors, reverse=True, key=lambda x: x[1] )
-        possible_neighbors = possible_neighbors[:self.k]
-        
-        return possible_neighbors
+        self.user_purchases = user_purchases
+        return user_purchases
     
-            
-    def score_items(self, neighbors):
-        '''
-        Compute a set of scores for all items given a set of neighbors.
+    def fit(self, purchase_events, sessions):
+        """
+        Fit the SKNN_E model
         
-        Parameters
-        --------
-        neighbors: set of session ids
+        Parameters:
+        -----------
+        purchase_events : pd.DataFrame
+            DataFrame containing purchase events
+        sessions : pd.DataFrame
+            DataFrame containing session data
+        """
+        train_purchases, val_purchases, train_sessions, val_sessions = self.split_train_validation(
+            purchase_events, sessions
+        )
         
-        Returns 
-        --------
-        out : list of tuple (item, score)           
-        '''
-        # now we have the set of relevant items to make predictions
-        scores = dict()
-        # iterate over the sessions
-        for session in neighbors:
-            # get the items in this session
-            items = self.items_for_session( session[0] )
+        self.val_purchases = val_purchases
+        self.val_sessions = val_sessions
+
+        train_purchases, train_sessions = self.preprocess_data(train_purchases, train_sessions)
+        self.action_matrix = self.create_user_action_vectors(train_sessions)
+        self.user_purchases = self.create_purchase_vectors(train_purchases)
+
+        self.knn.fit(self.action_matrix, self.event_ids)
+        
+    def recommend(self, user_sessions, n_recommendations=5):
+        """Generate recommendations using consistent features."""
+        user_actions = set()
+        for _, row in user_sessions.iterrows():
+            features = self.create_action_feature(row)  # Generate all features
+            for feature in features:
+                if feature in self.feature_names:  # Filter unseen features
+                    user_actions.add(feature)
+        
+        user_vector = self.mlb.transform([list(user_actions)])
+        
+        # find nearest neighbors
+        _, indices = self.knn.kneighbors(user_vector)
+        neighbor_ids = [self.event_ids[idx] for idx in indices[0]]
+        
+        # find most common items
+        neighbor_purchases = []
+        for neighbor_id in neighbor_ids:
+            if neighbor_id in self.user_purchases:
+                neighbor_purchases.extend(self.user_purchases[neighbor_id])
+
+        item_counts = defaultdict(int)
+        for item in neighbor_purchases:
+            item_counts[item] += 1
             
-            for item in items:
-                old_score = scores.get( item )
-                new_score = session[1]
+        sorted_items = sorted(item_counts.items(), key=lambda x: x[1], reverse=True)
+
+        recommendations = [item[0] for item in sorted_items[:n_recommendations]]
+        return recommendations
+
+    def calculate_metrics(self, test_purchases, test_sessions, k=3):
+        """
+        Calculate HR@k, Precision@k, Recall@k, MRR@k, and MAP@k for test data
+        
+        Parameters:
+        -----------
+        test_purchases : pd.DataFrame
+            DataFrame containing test purchase events
+        test_sessions : pd.DataFrame
+            DataFrame containing test session data
+        k : int
+            Number of recommendations to generate
+            
+        Returns:
+        --------
+        dict
+            Dictionary containing the calculated metrics
+        """
+        metrics = {
+            f'HR@{k}': 0,
+            f'Precision@{k}': 0,
+            f'Recall@{k}': 0,
+            f'MRR@{k}': 0,
+            f'MAP@{k}': 0
+        }
+        
+        # Group test purchases by event_id
+        test_purchase_dict = defaultdict(set)
+        for _, row in test_purchases.iterrows():
+            test_purchase_dict[row['event_id']].add(row['item_id'])
+        
+        # Get unique test users
+        test_users = test_sessions['event_id'].unique()
+        total_users = len(test_users)
+        
+        if total_users == 0:
+            return metrics
+        
+        ap_sum = 0  # For MAP calculation
+        
+        for user_id in test_users:
+            # Get user sessions and actual purchases
+            user_sessions = test_sessions[test_sessions['event_id'] == user_id]
+            actual_purchases = test_purchase_dict.get(user_id, set())
+            
+            if not actual_purchases:
+                continue
                 
-                if old_score is None:
-                    scores.update({item : new_score})
-                else: 
-                    new_score = old_score + new_score
-                    scores.update({item : new_score})
-                    
-        return scores
+            # Get recommendations for user
+            recommendations = self.recommend(user_sessions, n_recommendations=k)
+            recommended_set = set(recommendations)
+            
+            # Hit Ratio: 1 if at least one item is correctly recommended
+            hit = len(actual_purchases & recommended_set) > 0
+            metrics[f'HR@{k}'] += hit
+            
+            # Precision: proportion of recommended items that were actually purchased
+            precision = len(actual_purchases & recommended_set) / len(recommendations) if recommendations else 0
+            metrics[f'Precision@{k}'] += precision
+            
+            # Recall: proportion of purchased items that were recommended
+            recall = len(actual_purchases & recommended_set) / len(actual_purchases) if actual_purchases else 0
+            metrics[f'Recall@{k}'] += recall
+            
+            # MRR: reciprocal rank of the first relevant recommendation
+            mrr = 0
+            for i, item in enumerate(recommendations):
+                if item in actual_purchases:
+                    mrr = 1.0 / (i + 1)
+                    break
+            metrics[f'MRR@{k}'] += mrr
+            
+            # Average Precision for MAP
+            ap = 0
+            hits = 0
+            for i, item in enumerate(recommendations):
+                if item in actual_purchases:
+                    hits += 1
+                    ap += hits / (i + 1)
+            if hits > 0:
+                ap = ap / min(len(actual_purchases), k)
+                ap_sum += ap
+        
+        # Normalize metrics by number of users
+        for metric in ['HR', 'Precision', 'Recall', 'MRR']:
+            metrics[f'{metric}@{k}'] /= total_users
+        
+        # Calculate MAP
+        metrics[f'MAP@{k}'] = ap_sum / total_users
+        
+        return metrics
+
+    def evaluate_test_set(self, test_purchases, test_sessions, k_values=[5, 10, 20]):
+        """
+        Evaluate the model on test data for multiple k values
+        
+        Parameters:
+        -----------
+        test_purchases : pd.DataFrame
+            DataFrame containing test purchase events
+        test_sessions : pd.DataFrame
+            DataFrame containing test session data
+        k_values : list
+            List of k values to evaluate
+            
+        Returns:
+        --------
+        dict
+            Dictionary containing metrics for each k value
+        """
+        results = {}
+        
+        for k in k_values:
+            metrics = self.calculate_metrics(test_purchases, test_sessions, k)
+            results[k] = metrics
+            
+            print(f"\nMetrics for k={k}:")
+            for metric, value in metrics.items():
+                print(f"{metric}: {value:.4f}")
+        
+        return results
+
+if __name__ == "__main__":
+    purchase_events = pd.read_csv('../Data Sets/purchase_events_train.csv')
+    sessions = pd.read_csv('../Data Sets/sessions_train.csv')
     
-    def clear(self):
-        self.session = -1
-        self.session_items = []
-        self.relevant_sessions = set()
+    model = SKNN(n_neighbors=30, recent_sessions_window=7)
+    model.fit(purchase_events, sessions)
+    
+    val_user_sessions = model.val_sessions[model.val_sessions['event_id'] == model.val_sessions['event_id'].iloc[0]]
+    recommendations = model.recommend(val_user_sessions, n_recommendations=5)
+    print("Recommended items:", recommendations)
 
-        self.session_item_map = dict() 
-        self.item_session_map = dict()
-        self.session_time = dict()
+    test_purchases = pd.read_csv('../Data Sets/purchase_events_test.csv')
+    test_sessions = pd.read_csv('../Data Sets/sessions_test.csv')
 
-    def support_users(self):
-        '''
-          whether it is a session-based or session-aware algorithm
-          (if returns True, method "predict_with_training_data" must be defined as well)
+    results = model.evaluate_test_set(test_purchases, test_sessions, k_values=[3])
+    print(results)
 
-          Parameters
-          --------
-
-          Returns
-          --------
-          True : if it is session-aware
-          False : if it is session-based
-        '''
-        return False
