@@ -56,11 +56,11 @@ def train_model(set_seed,set_rate):
     model.compile(loss='binary_crossentropy', optimizer='adam')
 
     es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=5)
-    mc = ModelCheckpoint(f'models/model_encode_{set_seed}_{set_rate}.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+    mc = ModelCheckpoint(f'../weights/model_encode_{set_seed}_{set_rate}.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
 
     history = model.fit(train_x, train_y, validation_data=(valid_x, valid_y), epochs=epochs, batch_size=batch_size, callbacks=[es, mc])
 
-    saved_model = load_model(f'models/model_encode_{set_seed}_{set_rate}.h5')
+    saved_model = load_model(f'../weights/model_encode_{set_seed}_{set_rate}.h5')
     valid_pred = saved_model.predict(valid_x)
     valid_pred = valid_pred*valid_w
     auc = metrics.roc_auc_score(valid_y, valid_pred)

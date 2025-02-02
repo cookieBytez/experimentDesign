@@ -44,7 +44,7 @@ print([np.mean(hit), np.mean(precision), np.mean(recall), np.mean(rr), np.mean(a
 
 # Statistical significans
 statistical_significans = pd.DataFrame({'hit' : hit, 'precision' : precision, 'recall' : recall, 'RR' : rr, 'AP' : ap})
-statistical_significans.to_csv('evaluations/statistical_significans_random.csv', index=False)
+statistical_significans.to_csv('../evaluations/statistical_significans_random.csv', index=False)
 
 # Varying thresholds
 hr = []
@@ -60,4 +60,4 @@ for k in range(1,6):
     mean_average_precision.append(np.mean(evaluation_functions.average_precision(pred, test_y, k)))
 
 varying_thresholds = pd.DataFrame({'HR' : hr, 'precision' : precision, 'recall' : recall, 'MRR' : mrr, 'MAP' : mean_average_precision})
-varying_thresholds.to_csv('evaluations/varying_thresholds_random.csv', index=False)
+varying_thresholds.to_csv('../evaluations/varying_thresholds_random.csv', index=False)

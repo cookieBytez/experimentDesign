@@ -15,7 +15,7 @@ def eval_model(set_seed,set_rate):
     n_steps = 30
     data_sessions_encoder = pre_processing_functions.start_padding_and_split_sessions(data_sessions, group_columns, sort_columns, n_steps, split=False)
 
-    encoder_model = load_model('models/model_auto_encoder.h5')
+    encoder_model = load_model('../weights/model_auto_encoder.h5')
     encoder_pred = encoder_model.predict(data_sessions_encoder)
 
     data_sessions = data_sessions[['event_id', 'session_id', 'action_time']].groupby(['event_id', 'session_id'], as_index=False).min()
@@ -42,7 +42,7 @@ def eval_model(set_seed,set_rate):
 
 
     ''' Predict. '''
-    model = load_model(f'models/model_auto_{set_seed}_{set_rate}.h5')
+    model = load_model(f'../weights/model_auto_{set_seed}_{set_rate}.h5')
     pred = model.predict(test_x)
     pred = pred*test_w
 
@@ -65,7 +65,7 @@ def eval_model(set_seed,set_rate):
 
     # Statistical significans
     statistical_significans = pd.DataFrame({'hit' : hit, 'precision' : precision, 'recall' : recall, 'RR' : rr, 'AP' : ap})
-    statistical_significans.to_csv(f'evaluations/statistical_significans_auto_{set_seed}_{set_rate}.csv', index=False)
+    statistical_significans.to_csv(f'../evaluations/statistical_significans_auto_{set_seed}_{set_rate}.csv', index=False)
 
     # Varying thresholds
     hr = []
@@ -81,4 +81,4 @@ def eval_model(set_seed,set_rate):
         mean_average_precision.append(np.mean(evaluation_functions.average_precision(pred, test_y, k)))
 
     varying_thresholds = pd.DataFrame({'HR' : hr, 'precision' : precision, 'recall' : recall, 'MRR' : mrr, 'MAP' : mean_average_precision})
-    varying_thresholds.to_csv(f'evaluations/varying_thresholds_auto_{set_seed}_{set_rate}.csv', index=False)
+    varying_thresholds.to_csv(f'../evaluations/varying_thresholds_auto_{set_seed}_{set_rate}.csv', index=False)

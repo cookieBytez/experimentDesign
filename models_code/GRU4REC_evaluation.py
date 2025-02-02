@@ -46,7 +46,7 @@ def eval_model(set_seed,set_rate):
 
 
     ''' Predict. '''
-    model = load_model(f'models/model_GRU4REC_{set_seed}_{set_rate}.h5')
+    model = load_model(f'../weights/model_GRU4REC_{set_seed}_{set_rate}.h5')
     preds = model.predict(test_x)
     pred_last = np.empty([preds.shape[0], preds.shape[2]])
     for i in range(len(preds)):
@@ -80,7 +80,7 @@ def eval_model(set_seed,set_rate):
 
     # Statistical significans
     statistical_significans = pd.DataFrame({'hit' : hit, 'precision' : precision, 'recall' : recall, 'RR' : rr, 'AP' : ap})
-    statistical_significans.to_csv(f'evaluations/statistical_significans_GRU4REC_{set_seed}_{set_rate}.csv', index=False)
+    statistical_significans.to_csv(f'../evaluations/statistical_significans_GRU4REC_{set_seed}_{set_rate}.csv', index=False)
 
     # Varying thresholds
     hr = []
@@ -96,4 +96,4 @@ def eval_model(set_seed,set_rate):
         mean_average_precision.append(np.mean(evaluation_functions.average_precision(pred, test_y, k)))
 
     varying_thresholds = pd.DataFrame({'HR' : hr, 'precision' : precision, 'recall' : recall, 'MRR' : mrr, 'MAP' : mean_average_precision})
-    varying_thresholds.to_csv(f'evaluations/varying_thresholds_GRU4REC_{set_seed}_{set_rate}.csv', index=False)
+    varying_thresholds.to_csv(f'../evaluations/varying_thresholds_GRU4REC_{set_seed}_{set_rate}.csv', index=False)

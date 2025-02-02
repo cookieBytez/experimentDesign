@@ -31,5 +31,5 @@ def visualise(model,seed):
     plt.xticks(rotation=45)
     plt.legend(title="Learning rate", loc="lower right")
     plt.grid(axis='y', linestyle='--', alpha=0.7)
-    plt.savefig(f'visualisations/{model}_seed_{seed}_plot.png', dpi=300, bbox_inches='tight')
+    plt.savefig(f'{model}_seed_{seed}_plot.png', dpi=300, bbox_inches='tight')
     plt.close()

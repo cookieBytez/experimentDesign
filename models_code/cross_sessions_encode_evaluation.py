@@ -35,7 +35,7 @@ def eval_model(set_seed,set_rate):
 
 
     ''' Predict. '''
-    model = load_model(f'models/model_encode_{set_seed}_{set_rate}.h5')
+    model = load_model(f'../weights/model_encode_{set_seed}_{set_rate}.h5')
     pred = model.predict(test_x)
     pred = pred*test_w
 
@@ -58,7 +58,7 @@ def eval_model(set_seed,set_rate):
 
     # Statistical significans
     statistical_significans = pd.DataFrame({'hit' : hit, 'precision' : precision, 'recall' : recall, 'RR' : rr, 'AP' : ap})
-    statistical_significans.to_csv(f'evaluations/statistical_significans_encode_{set_seed}_{set_rate}.csv', index=False)
+    statistical_significans.to_csv(f'../evaluations/statistical_significans_encode_{set_seed}_{set_rate}.csv', index=False)
 
     # Varying thresholds
     hr = []
@@ -74,4 +74,4 @@ def eval_model(set_seed,set_rate):
         mean_average_precision.append(np.mean(evaluation_functions.average_precision(pred, test_y, k)))
 
     varying_thresholds = pd.DataFrame({'HR' : hr, 'precision' : precision, 'recall' : recall, 'MRR' : mrr, 'MAP' : mean_average_precision})
-    varying_thresholds.to_csv(f'evaluations/varying_thresholds_encode_{set_seed}_{set_rate}.csv', index=False)
+    varying_thresholds.to_csv(f'../evaluations/varying_thresholds_encode_{set_seed}_{set_rate}.csv', index=False)

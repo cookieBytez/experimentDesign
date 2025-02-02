@@ -60,7 +60,7 @@ def train_model(set_seed,set_rate):
 
 
     ''' Autoencoder model. '''
-    if not os.path.exists('models/model_auto_encoder.h5'):
+    if not os.path.exists('../weights/model_auto_encoder.h5'):
         seed(42)
         tf.random.set_seed(42)
 
@@ -94,11 +94,11 @@ def train_model(set_seed,set_rate):
         model.compile(loss=['categorical_crossentropy', 'categorical_crossentropy', 'categorical_crossentropy'], optimizer='adam', sample_weight_mode='temporal')
 
         es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=10)
-        mc = ModelCheckpoint('models/model_auto_autoencoder.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+        mc = ModelCheckpoint('../weights/model_auto_autoencoder.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
 
         model.fit(tf_train, validation_data=tf_valid, epochs=epochs, batch_size=batch_size, callbacks=[es, mc])
 
-        saved_model = load_model('models/model_auto_autoencoder.h5')
+        saved_model = load_model('../weights/model_auto_autoencoder.h5')
         pred = saved_model.predict(valid_x, verbose=0)
         proba_section = pred[0]
         proba_object = pred[1]
@@ -111,9 +111,9 @@ def train_model(set_seed,set_rate):
         accuracy_type = evaluation_functions.autoencoder_accuracy(proba_type, n_timesteps, n_types, valid_type, valid_sample_weight, avg_weight)
 
         encoder_model = Model(saved_model.input, saved_model.layers[-6].output)  
-        encoder_model.save('models/model_auto_encoder.h5')
+        encoder_model.save('../weights/model_auto_encoder.h5')
     else:
-        encoder_model = load_model('models/model_auto_encoder.h5')
+        encoder_model = load_model('../weights/model_auto_encoder.h5')
 
     ''' Sessions for RNN. '''
     group_columns = ['event_id', 'session_id']
@@ -162,11 +162,11 @@ def train_model(set_seed,set_rate):
     model.compile(loss='binary_crossentropy', optimizer='adam')
 
     es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=5)
-    mc = ModelCheckpoint(f'models/model_auto_{set_seed}_{set_rate}.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+    mc = ModelCheckpoint(f'../weights/model_auto_{set_seed}_{set_rate}.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
 
     history = model.fit(train_x, train_y, validation_data=(valid_x, valid_y), epochs=epochs, batch_size=batch_size, callbacks=[es, mc])
 
-    saved_model = load_model(f'models/model_auto_{set_seed}_{set_rate}.h5')
+    saved_model = load_model(f'../weights/model_auto_{set_seed}_{set_rate}.h5')
     valid_pred = saved_model.predict(valid_x)
     valid_pred = valid_pred*valid_w
     auc = metrics.roc_auc_score(valid_y, valid_pred)

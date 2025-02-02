@@ -7,7 +7,7 @@ data = {}
 
 for model in models:
     try:
-        data[model] = pd.read_csv(f'varying_thresholds_{model}.csv')
+        data[model] = pd.read_csv(f'../statistical_test/varying_thresholds_{model}.csv')
     except FileNotFoundError:
         print(f"Warning: File 'varying_thresholds_{model}.csv' not found. Skipping this model.")
 
