@@ -2,6 +2,10 @@
 
 This repository aims to recreate the findings from "Learning Recommendations from User Actions in the Item-poor Insurance Domain" by Simone Borg Bruun, Maria Maistro, and Christina Lioma. It contains adapted code from the [author's repository](https://github.com/simonebbruun/cross-sessions_RS). This repository is supplementary to our report (DOI: 10.5281/zenodo.14790070)
 
+## Module versions
+
+A requirements.txt file is included which can be used to setup the environment used to run the code.
+
 ## File Structure
 
 ### /cross_examine.py
