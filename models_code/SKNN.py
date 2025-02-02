@@ -314,8 +314,8 @@ class SKNN:
         return results
 
 if __name__ == "__main__":
-    purchase_events = pd.read_csv('../Data Sets/purchase_events_train.csv')
-    sessions = pd.read_csv('../Data Sets/sessions_train.csv')
+    purchase_events = pd.read_csv('../datasets/purchase_events_train.csv')
+    sessions = pd.read_csv('../datasets/sessions_train.csv')
     
     model = SKNN(n_neighbors=30, recent_sessions_window=7)
     model.fit(purchase_events, sessions)
@@ -324,8 +324,8 @@ if __name__ == "__main__":
     recommendations = model.recommend(val_user_sessions, n_recommendations=5)
     print("Recommended items:", recommendations)
 
-    test_purchases = pd.read_csv('../Data Sets/purchase_events_test.csv')
-    test_sessions = pd.read_csv('../Data Sets/sessions_test.csv')
+    test_purchases = pd.read_csv('../datasets/purchase_events_test.csv')
+    test_sessions = pd.read_csv('../datasets/sessions_test.csv')
 
     results = model.evaluate_test_set(test_purchases, test_sessions, k_values=[3])
     print(results)

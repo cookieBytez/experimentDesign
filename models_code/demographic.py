@@ -67,13 +67,13 @@ valid_x = valid_x.to_numpy()
 
 
 ''' Purchase events. '''
-data_events = pd.read_csv('purchase_events_train.csv')
+data_events = pd.read_csv('../datasets/purchase_events_train.csv')
 
 train_y, valid_y = pre_processing_functions.binarize_and_split_purchases(data_events)
 
 
 ''' Filter. '''
-data_filter = pd.read_csv('filter_train.csv')
+data_filter = pd.read_csv('../datasets/filter_train.csv')
 
 train_w, valid_w = pre_processing_functions.binarize_and_split_purchases(data_filter)
 

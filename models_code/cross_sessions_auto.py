@@ -21,7 +21,7 @@ import os
 def train_model(set_seed,set_rate):
 
     ''' Sessions. '''
-    data_sessions = pd.read_csv('sessions_train.csv')
+    data_sessions = pd.read_csv('../datasets/sessions_train.csv')
     n_sections = len(pd.unique(data_sessions['action_section']))
     n_objects = len(pd.unique(data_sessions['action_object']))
     n_types = len(pd.unique(data_sessions['action_type']))
@@ -136,13 +136,13 @@ def train_model(set_seed,set_rate):
 
 
     ''' Purchase events. '''
-    data_events = pd.read_csv('purchase_events_train.csv')
+    data_events = pd.read_csv('../datasets/purchase_events_train.csv')
 
     train_y, valid_y = pre_processing_functions.binarize_and_split_purchases(data_events)
 
 
     ''' Filter. '''
-    data_filter = pd.read_csv('filter_train.csv')
+    data_filter = pd.read_csv('../datasets/filter_train.csv')
 
     train_w, valid_w = pre_processing_functions.binarize_and_split_purchases(data_filter)
 

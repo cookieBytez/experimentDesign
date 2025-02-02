@@ -14,7 +14,7 @@ from tensorflow.keras.models import load_model
 
 def train_model(set_seed,set_rate):
     ''' Sessions. '''
-    data_sessions = pd.read_csv('sessions_train.csv')
+    data_sessions = pd.read_csv('../datasets/sessions_train.csv')
 
     data_sessions = pre_processing_functions.one_hot_encode_actions_fit_transform(data_sessions)[0]
 

@@ -58,9 +58,9 @@ def remove_events_from_purchase_events(file_path, category, event_ids_to_remove)
 
 # File paths
 traintest = 'test'
-sessions_file_path = f'../Data Sets/sessions_{traintest}.csv'
-purchase_events_file_path = f'../Data Sets/purchase_events_{traintest}.csv'
-filter_file_path = f'../Data Sets/filter_{traintest}.csv'
+sessions_file_path = f'../datasets/sessions_{traintest}.csv'
+purchase_events_file_path = f'../datasets/purchase_events_{traintest}.csv'
+filter_file_path = f'../datasets/filter_{traintest}.csv'
 
 # List of categories and columns to remove rows from in sessions
 categories_to_remove = [

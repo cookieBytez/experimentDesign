@@ -5,18 +5,18 @@ import evaluation_functions
 
 
 ''' Purchase events. '''
-data_events = pd.read_csv('purchase_events_train.csv')
+data_events = pd.read_csv('../datasets/purchase_events_train.csv')
 
 data_events = data_events.drop(['valid'], axis=1)
 train_y = pre_processing_functions.binarize_and_split_purchases(data_events, split=False)[0]
 
-data_events = pd.read_csv('purchase_events_test.csv')
+data_events = pd.read_csv('../datasets/purchase_events.csv')
 
 test_y = pre_processing_functions.binarize_and_split_purchases(data_events, split=False)[0]
 
 
 ''' Filter. '''
-data_filter = pd.read_csv('filter_test.csv')
+data_filter = pd.read_csv('../datasets/filter_test.csv')
 
 test_w = pre_processing_functions.binarize_and_split_purchases(data_filter, split=False)[0]
 

@@ -6,7 +6,7 @@ import evaluation_functions
 
 def eval_model(set_seed,set_rate):
     ''' Sessions. '''
-    data_sessions = pd.read_csv('sessions_test.csv')
+    data_sessions = pd.read_csv('../datasets/sessions_test.csv')
 
     data_sessions = pre_processing_functions.one_hot_encode_actions_transform(data_sessions)[0]
 
@@ -34,13 +34,13 @@ def eval_model(set_seed,set_rate):
 
 
     ''' Purchase events. '''
-    data_events = pd.read_csv('purchase_events_test.csv')
+    data_events = pd.read_csv('../datasets/purchase_events.csv')
 
     test_y, item_columns = pre_processing_functions.binarize_and_split_purchases(data_events, split=False)
     item_columns = 'action_object_' + item_columns
 
     ''' Filter. '''
-    data_filter = pd.read_csv('filter_test.csv')
+    data_filter = pd.read_csv('../datasets/filter_test.csv')
 
     test_w = pre_processing_functions.binarize_and_split_purchases(data_filter, split=False)[0]
 
