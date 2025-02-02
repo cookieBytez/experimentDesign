@@ -8,9 +8,11 @@ This repository aims to recreate the findings from "Learning Recommendations fro
 
 contains the files needed for the abaltion study. This includes ablation.py which creates the dataset subsets for the ablation categories. The other files are adaptations of the original learning and evaluation scripts from the paper that take in the adapted datasets and train and evaluate on them
 
-### /SKNN.py
+### /models_code
 
-script that contains our custom version of the session based k nearest neighbour algorithm.
+directory containing the training and evaluation code of all models
+
+SKNN.py: script that contains our custom version of the session based k nearest neighbour algorithm.
 
 ### /statistical_test
 
@@ -19,3 +21,7 @@ contains the custom script for McNemar and one-way ANOVA testing of the evaluati
 ### /visualizations
 
 contains the scripts and data to recreate the visualizations that can be found in our report
+
+### /weights
+
+weights of the trained models
