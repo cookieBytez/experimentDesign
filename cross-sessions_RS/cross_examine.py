@@ -3,6 +3,7 @@ import cross_sessions_auto,cross_sessions_auto_evaluation
 import cross_sessions_concat,cross_sessions_concat_evaluation
 import GRU4REC_concat,GRU4REC_concat_evaluation
 import GRU4REC,GRU4REC_evaluation
+import visualisations
 from datetime import datetime
 
 def save_runtime(times,filename):
@@ -21,7 +22,7 @@ import popular_evaluation
 #random_model
 import random_evaluation
 
-#GRU4REC
+#GRU4REC model
 for i in seeds:
     for j in rates:
         times = []
@@ -34,8 +35,9 @@ for i in seeds:
         times.append(f"End: {end_time} - Seed: {i}, Rate: {j}, Model: GRU4REC")
         times.append(f"Total time:{(end_time-start_time).total_seconds()} secs")
         save_runtime(times,'GRU4REC')
+    visualisations.visualise('GRU4REC',i)
 
-#GRU4REC_concat
+#GRU4REC_concat model
 for i in seeds:
     for j in rates:
         times = []
@@ -48,6 +50,7 @@ for i in seeds:
         times.append(f"End: {end_time} - Seed: {i}, Rate: {j}, Model: GRU4REC_concat")
         times.append(f"Total time:{(end_time-start_time).total_seconds()} secs")
         save_runtime(times,'GRU4REC_concat')
+    visualisations.visualise('GRu4REC_concat',i)
 
 #cross_sessions_auto
 for i in seeds:
@@ -62,6 +65,7 @@ for i in seeds:
         times.append(f"End: {end_time} - Seed: {i}, Rate: {j}, Model: cs_auto")
         times.append(f"Total time:{(end_time-start_time).total_seconds()} secs")
         save_runtime(times,'cs_auto')
+    visualisations.visualise('auto',i)
 
 #cross_sessions_encode
 for i in seeds:
@@ -76,6 +80,7 @@ for i in seeds:
         times.append(f"End: {end_time} - Seed: {i}, Rate: {j}, Model: cs_encode")
         times.append(f"Total time:{(end_time-start_time).total_seconds()} secs")
         save_runtime(times,'cs_encode')
+    visualisations.visualise('encode',i)
 
 #cross_sessions_concat
 for i in seeds:
@@ -90,3 +95,4 @@ for i in seeds:
         times.append(f"End: {end_time} - Seed: {i}, Rate: {j}, Model: cs_concat")
         times.append(f"Total time:{(end_time-start_time).total_seconds()} secs")
         save_runtime(times,'cs_concat')
+    visualisations.visualise('concat',i)
