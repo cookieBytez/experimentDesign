@@ -1,6 +1,6 @@
 # Recreation of the paper "Learning Recommendations from User Actions in the Item-poor Insurance Domain"
 
-This repository aims to recreate the findings from "Learning Recommendations from User Actions in the Item-poor Insurance Domain" by Simone Borg Bruun, Maria Maistro, and Christina Lioma. It contains adapted code from the [author's repository](https://github.com/simonebbruun/cross-sessions_RS).
+This repository aims to recreate the findings from "Learning Recommendations from User Actions in the Item-poor Insurance Domain" by Simone Borg Bruun, Maria Maistro, and Christina Lioma. It contains adapted code from the [author's repository](https://github.com/simonebbruun/cross-sessions_RS). This repository is supplementary to our report (DOI: 10.5281/zenodo.14790070)
 
 ## File Structure
 
