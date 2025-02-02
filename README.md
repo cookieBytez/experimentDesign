@@ -4,6 +4,14 @@ This repository aims to recreate the findings from "Learning Recommendations fro
 
 ## File Structure
 
+### /cross_examine.py
+
+contains scripts to to test all the RNN,random and popular models with different learning rate ([01,0.5]), seeds and learning rates are customisable. This code also generates the comparison visualisation for the RNN models in /visualizations folder.
+
+### /datasets
+
+contains all the dataset which were originally provided by the author
+
 ### /ablation
 
 contains the files needed for the abaltion study. This includes ablation.py which creates the dataset subsets for the ablation categories. The other files are adaptations of the original learning and evaluation scripts from the paper that take in the adapted datasets and train and evaluate on them
