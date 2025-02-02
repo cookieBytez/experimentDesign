@@ -6,6 +6,10 @@ This repository aims to recreate the findings from "Learning Recommendations fro
 
 A requirements.txt file is included which can be used to setup the environment used to run the code.
 
+## Module versions
+
+A requirements.txt file is included which can be used to setup the environment used to run the code.
+
 ## File Structure
 
 ### /cross_examine.py
